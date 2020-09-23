@@ -12,7 +12,8 @@ the link for detials: <https://projecteuclid.org/euclid.aos/1403715201>
 
 ## Installation
 
-The development version from [GitHub](https://github.com/) with:
+You can install the development version from
+[GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")

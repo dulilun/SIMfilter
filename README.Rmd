@@ -22,7 +22,7 @@ The goal of SIMfilter is to provide an R package for our SIM paper; see the link
 
 ## Installation
 
-The development version from [GitHub](https://github.com/) with:
+You can install the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
