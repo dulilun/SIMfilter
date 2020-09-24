@@ -160,37 +160,31 @@ SIM_lambda_selection <-  function(p_theta, SIM_F_0_method, mu_theta, sigma_theta
     search_grid_for_lambda = sort(search_grid_for_lambda)
     n_lambda_grid = length(search_grid_for_lambda)
 
+    func <- function(lambda_i, pi_0_i_minus_1){
+      F_0 = SIM_estimated_F_0(lambda_i, p_theta, SIM_F_0_method, mu_theta, sigma_theta)
+      pi_0_i = estimated_pi_0(lambda_i, p_theta, F_0)
+      return( list((pi_0_i >= pi_0_i_minus_1), pi_0_i) )
+    }
+    # initial value
+    i = 0
     lambda_0 = 0
-    i = 1
-    F_0 = SIM_estimated_F_0(search_grid_for_lambda[i], p_theta, SIM_F_0_method, mu_theta, sigma_theta)
-    pi_0_i = estimated_pi_0(search_grid_for_lambda[i], p_theta, F_0)
-
     F_0 = SIM_estimated_F_0(lambda_0, p_theta, SIM_F_0_method, mu_theta, sigma_theta)
     pi_0_i_minus_1 = estimated_pi_0(lambda_0, p_theta, F_0)
 
-    if(pi_0_i >= pi_0_i_minus_1){
-      lambda_select = search_grid_for_lambda[i]
-    }else{
-
-      i = 2
-      while( i <= (n_lambda_grid - 1) ){
-        F_0 = SIM_estimated_F_0(search_grid_for_lambda[i], p_theta, SIM_F_0_method, mu_theta, sigma_theta)
-        pi_0_i = estimated_pi_0(search_grid_for_lambda[i], p_theta, F_0)
-        F_0 = SIM_estimated_F_0(search_grid_for_lambda[i-1], p_theta, SIM_F_0_method, mu_theta, sigma_theta)
-        pi_0_i_minus_1 = estimated_pi_0(search_grid_for_lambda[i-1], p_theta, F_0)
-
-        if(pi_0_i >= pi_0_i_minus_1){
-          lambda_select = search_grid_for_lambda[i]
-          break
-        }
-        i = i+1
-
-        if(i == n_lambda_grid) lambda_select = search_grid_for_lambda[n_lambda_grid]
+    while( i <= (n_lambda_grid - 1) ){
+      i=i+1
+      lambda_i = search_grid_for_lambda[i]
+      out = func(lambda_i, pi_0_i_minus_1)
+      if( out[[1]] ){
+        lambda_select = search_grid_for_lambda[i]
+        break
+      }else{
+        pi_0_i_minus_1 = out[[2]]
       }
     }
 
+    if(i == n_lambda_grid) lambda_select = search_grid_for_lambda[n_lambda_grid]
   }
-
   return(lambda_select)
 }
 
@@ -293,10 +287,8 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
   search_grid_for_theta_0 = option$search_grid_for_theta_0
   par = length(search_grid_for_theta_0)
 
-  N_rej = rep(0, par)
-  for(i in 1:par){
-    theta_i = search_grid_for_theta_0[i]
-    SIM_p = SIM_p_value(p_1, p_2, theta_i)
+  func <- function(theta){
+    SIM_p = SIM_p_value(p_1, p_2, theta)
 
     if(SIM_F_0_method == 1){
       mu_theta = 0
@@ -306,9 +298,11 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
       hat_sigma = NULL
     }
 
-    N_rej[i] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
+    out = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
+    return(out)
   }
 
+  N_rej <- sapply(search_grid_for_theta_0, func)
   i_hat = which.max(N_rej)
   # refine the method
   if(i_hat == 1){
@@ -323,22 +317,8 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
   }
 
 
-  N_rej = rep(0, par)
   theta1 = seq(x_left, x_right, (x_right-x_left)/par)
-  for(k in 1:par){
-    theta_k = theta1[k]
-    SIM_p = SIM_p_value(p_1, p_2, theta_k)
-
-    if(SIM_F_0_method == 1){
-      mu_theta = 0
-      hat_sigma = SIM_estimated_sigma_0_theta(SIM_p)
-    }else if(SIM_F_0_method == 2){
-      mu_theta = NULL
-      hat_sigma = NULL
-    }
-
-    N_rej[k] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
-  }
+  N_rej <- sapply(theta1, func)
   k_hat = which.max(N_rej)
   OUT = theta1[k_hat]
 
@@ -379,7 +359,7 @@ SIM <- function(p_1, p_2, alpha, SIM_F_0_method=1, method_lambda=1, method_t=1){
   if(option$method_selecting_lambda == 1){
     option$specified_lambda = 0.5
   }else if(option$method_selecting_lambda == 2){
-    search_grid_for_lambda = seq(0.1, 0.5, (0.5-0.1)/17)
+    search_grid_for_lambda = seq(0.1, 0.8, (0.8-0.1)/15)
     option$search_grid_for_lambda = c(0.02, 0.04, 0.06, 0.08, search_grid_for_lambda)
   }
 
