@@ -374,7 +374,7 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
 #' @param p_2 the auxiliary p-values
 #' @param alpha the significance level
 #' @param SIM_F_0_method method for estimating the null distrbution (1: parametric; 2: nonparametic method)
-#' @param method_lambda method_lambda method for searching the lambda used in null proportion (1: specified; 2: adaptive)
+#' @param method_lambda method for searching the lambda used in null proportion (1: specified; 2: adaptive)
 #' @param method_t method for searching the p-value threshold (1: bisection; 2: grid search)
 #' @return the indices of the hypotheses rejected
 #' @examples
