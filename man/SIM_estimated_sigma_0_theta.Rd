@@ -10,7 +10,7 @@ SIM_estimated_sigma_0_theta(SIM_p)
 \item{SIM_p}{single-index SIM p-values}
 }
 \value{
-\eqn{\hat\sigma_0(\theta)}
+the sd of the SIM p-value
 }
 \description{
 Function to estimate the sd of the SIM p-value under true null

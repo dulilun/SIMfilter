@@ -11,7 +11,7 @@ SIM_p_value(p_1, p_2, theta)
 
 \item{p_2}{component p-value}
 
-\item{theta}{value in \eqn{[0, \pi/2]}}
+\item{theta}{projection direction in \eqn{[0, \pi/2]}}
 }
 \value{
 SIM_p: single index modulated p-value

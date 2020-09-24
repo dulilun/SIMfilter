@@ -32,19 +32,19 @@ SIM_estimated_F_0 <- function(t, p_theta, SIM_F_0_method, mu_0_theta, sigma_0_th
 nonparametric_estimated_F_0 <- function(t, p_vec){
 
   denominator = 2*sum( p_vec > 0.5 & p_vec <= 1 ) + sum( p_vec == 0.5 )
-  length_t = length(t)
-  hat_F_0_t = rep(0, length(t))
-  for(i in 1:length_t){
-    t_i = t[i]
-    if(0 <= t_i && t_i <= 0.5){
-      hat_F_0_t[i] = sum( p_vec >= (1-t_i) & p_vec <= 1 )/denominator
+  #
+  func <- function(t_i){
+    if(0 <= t_i & t_i <= 0.5){
+      out = sum( p_vec >= (1-t_i) & p_vec <= 1 )/denominator
     }else{
-      hat_F_0_t[i] = 1 - sum( p_vec >= t_i & p_vec <= 1 )/denominator
+      out = 1 - sum( p_vec >= t_i & p_vec <= 1 )/denominator
     }
+    return(out)
   }
+  #
+  hat_F_0_t = sapply(t, func)
   hat_F_0_t = pmax(0, pmin(hat_F_0_t, 1))  # in [0, 1]
   return(hat_F_0_t)
-
 }
 
 
@@ -80,14 +80,7 @@ estimated_pi_0 <- function(lambda, p_vec, hat_F_0_lambda){
 estimated_FDR <- function(t, p_vec, hat_pi_0, hat_F_0_t){
 
   m = length(p_vec)
-  length_t = length(t)
-
-  R_t = rep(0, length(t))
-  for(i in 1:length_t){
-    t_i = t[i]
-    R_t[i] = sum( p_vec <= t_i ) #R(t)
-  }
-
+  R_t <- sapply(t, function(x){ sum( p_vec <= x) })
   hat_V_t = m * hat_pi_0 * hat_F_0_t
   hat_V_t = pmin(hat_V_t, R_t)  #V(t) <= R(t)
   hat_FDR_t =  hat_V_t/pmax(R_t, 1)  # in [0, 1]
@@ -98,7 +91,7 @@ estimated_FDR <- function(t, p_vec, hat_pi_0, hat_F_0_t){
 
 #' Function to compute single index p-value
 #'
-#' @param theta value in \eqn{[0, \pi/2]}
+#' @param theta projection direction in \eqn{[0, \pi/2]}
 #' @param p_1 component p-value
 #' @param p_2 component p-value
 #'
@@ -124,7 +117,7 @@ SIM_p_value <- function(p_1, p_2, theta){
 #' @return \eqn{\hat\mu_0(\theta)}
 #'
 SIM_estimated_mu_0_theta <- function(SIM_p){
-  N = length(SIM_p)
+
   z = stats::qnorm(SIM_p)
   hat_mu = mean(z[z>-2 & z<2])
   return(hat_mu)
@@ -134,29 +127,14 @@ SIM_estimated_mu_0_theta <- function(SIM_p){
 #' Function to estimate the sd of the SIM p-value under true null
 #'
 #' @param SIM_p single-index SIM p-values
-#' @return \eqn{\hat\sigma_0(\theta)}
+#' @return the sd of the SIM p-value
 #'
 SIM_estimated_sigma_0_theta <- function(SIM_p){
 
-  N = length(SIM_p)
-
-  for(i in 1:N){
-    if(SIM_p[i] == 1) SIM_p[i] = 0.999999
-  }
-
+  SIM_p = pmin(SIM_p, 0.999999)
   z = stats::qnorm(SIM_p)
-  K = sum(z > 0)
-  z_trancate = rep(0, 2*K)
-
-  index = 0
-  for(i in 1:N){
-    if(z[i] > 0){
-      index = index+1
-      z_trancate[index] = z[i]
-      index = index+1
-      z_trancate[index] = -z[i]
-    }
-  }
+  positive = z[z>0]
+  z_trancate = c(positive, positive*(-1))
   hat_sigma = stats::sd(z_trancate)
 
   return(hat_sigma)
@@ -315,7 +293,7 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
   search_grid_for_theta_0 = option$search_grid_for_theta_0
   par = length(search_grid_for_theta_0)
 
-  N_rej1 = rep(0, par)
+  N_rej = rep(0, par)
   for(i in 1:par){
     theta_i = search_grid_for_theta_0[i]
     SIM_p = SIM_p_value(p_1, p_2, theta_i)
@@ -328,10 +306,10 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
       hat_sigma = NULL
     }
 
-    N_rej1[i] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
+    N_rej[i] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
   }
 
-  i_hat = which.max(N_rej1)
+  i_hat = which.max(N_rej)
   # refine the method
   if(i_hat == 1){
     x_left = search_grid_for_theta_0[1]
@@ -344,10 +322,10 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
     x_right = search_grid_for_theta_0[i_hat+1]
   }
 
-  par1 = length(search_grid_for_theta_0)
-  N_rej = rep(0, par1)
-  theta1 = seq(x_left, x_right, (x_right-x_left)/par1)
-  for(k in 1:par1){
+
+  N_rej = rep(0, par)
+  theta1 = seq(x_left, x_right, (x_right-x_left)/par)
+  for(k in 1:par){
     theta_k = theta1[k]
     SIM_p = SIM_p_value(p_1, p_2, theta_k)
 
@@ -389,8 +367,8 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
 SIM <- function(p_1, p_2, alpha, SIM_F_0_method=1, method_lambda=1, method_t=1){
 
   # theta-grid
-  par1 = 30
   option = list()
+  par1 = 30
   option$search_grid_for_theta_0 = seq(0, pi/2, (pi/2)/par1)
 
 
