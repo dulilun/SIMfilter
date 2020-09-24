@@ -7,9 +7,9 @@
 SIM_theta_0_selection(p_1, p_2, alpha, SIM_F_0_method, option)
 }
 \arguments{
-\item{p_1}{the primary p-values}
+\item{p_1}{the auxiliary p-values}
 
-\item{p_2}{the auxiliary p-values}
+\item{p_2}{the primary p-values}
 
 \item{alpha}{the significance level}
 

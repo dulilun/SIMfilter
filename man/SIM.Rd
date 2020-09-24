@@ -15,7 +15,7 @@ SIM(p_1, p_2, alpha, SIM_F_0_method = 1, method_lambda = 1, method_t = 1)
 
 \item{SIM_F_0_method}{method for estimating the null distrbution (1: parametric; 2: nonparametic method)}
 
-\item{method_lambda}{method_lambda method for searching the lambda used in null proportion (1: specified; 2: adaptive)}
+\item{method_lambda}{method for searching the lambda used in null proportion (1: specified; 2: adaptive)}
 
 \item{method_t}{method for searching the p-value threshold (1: bisection; 2: grid search)}
 }

@@ -303,8 +303,8 @@ SIM_threshold_for_p <- function(alpha, p_theta, hat_pi_0_theta, SIM_F_0_method, 
 
 #' Function: optimal selection of theta
 #'
-#' @param p_1 the primary p-values
-#' @param p_2 the auxiliary p-values
+#' @param p_1 the auxiliary p-values
+#' @param p_2 the primary p-values
 #' @param alpha the significance level
 #' @param SIM_F_0_method the method for estimating the null distribution
 #' @param option the grid for theta
