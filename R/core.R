@@ -370,8 +370,8 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
 
 #' The main function in SIM paper
 #'
-#' @param p_1 the primary p-values
-#' @param p_2 the auxiliary p-values
+#' @param p_1 the auxiliary  p-values
+#' @param p_2 the primary p-values
 #' @param alpha the significance level
 #' @param SIM_F_0_method method for estimating the null distrbution (1: parametric; 2: nonparametic method)
 #' @param method_lambda method for searching the lambda used in null proportion (1: specified; 2: adaptive)

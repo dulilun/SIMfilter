@@ -7,9 +7,9 @@
 SIM(p_1, p_2, alpha, SIM_F_0_method = 1, method_lambda = 1, method_t = 1)
 }
 \arguments{
-\item{p_1}{the primary p-values}
+\item{p_1}{the auxiliary  p-values}
 
-\item{p_2}{the auxiliary p-values}
+\item{p_2}{the primary p-values}
 
 \item{alpha}{the significance level}
 
