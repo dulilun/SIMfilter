@@ -4,15 +4,7 @@
 \alias{SIM}
 \title{The main function in SIM paper}
 \usage{
-SIM(
-  p_1,
-  p_2,
-  alpha,
-  SIM_F_0_method = 1,
-  method_theta = 1,
-  method_lambda = 1,
-  method_t = 1
-)
+SIM(p_1, p_2, alpha, SIM_F_0_method = 1, method_lambda = 1, method_t = 1)
 }
 \arguments{
 \item{p_1}{the primary p-values}
@@ -23,11 +15,12 @@ SIM(
 
 \item{SIM_F_0_method}{method for estimating the null distrbution (1: parametric; 2: nonparametic method)}
 
-\item{method_theta}{method for searching the projection direction theta (1: bisection; 2: grid-search)}
-
 \item{method_lambda}{method_lambda method for searching the lambda used in null proportion (1: specified; 2: adaptive)}
 
-\item{method_t}{method for searching for the p-value threshold (1: bisection; 2: grid search; 3: grid search using sorted p_values)}
+\item{method_t}{method for searching the p-value threshold (1: bisection; 2: grid search)}
+}
+\value{
+the indices of the hypotheses rejected
 }
 \description{
 The main function in SIM paper
@@ -39,5 +32,5 @@ p_1 = 1-pnorm(p_1)
 p_2 = rnorm(100)
 p_2[1:10]=p_2[1:10]+2
 p_2 = 1-pnorm(p_2)
-out = SIM(p_1, p_2, alpha = 0.1, SIM_F_0_method=1, method_theta=1, method_lambda=1, method_t=3)
+out = SIM(p_1, p_2, alpha = 0.1, SIM_F_0_method=1, method_lambda=1, method_t=2)
 }

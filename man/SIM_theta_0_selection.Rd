@@ -15,7 +15,7 @@ SIM_theta_0_selection(p_1, p_2, alpha, SIM_F_0_method, option)
 
 \item{SIM_F_0_method}{the method for estimating the null distribution}
 
-\item{option}{options for choosing theta}
+\item{option}{the grid for theta}
 }
 \value{
 the estimated projection direction
