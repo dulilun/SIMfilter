@@ -232,7 +232,7 @@ SIM_lambda_selection <-  function(p_theta, SIM_F_0_method, mu_theta, sigma_theta
 SIM_threshold_for_p <- function(alpha, p_theta, hat_pi_0_theta, SIM_F_0_method, mu_theta, sigma_theta, option){
 
   if(option$method_t_alpha == 1){
-
+    # step I: find the minimum value
     x_left = 0
     x_right = 1
     de = x_right-x_left
@@ -254,13 +254,13 @@ SIM_threshold_for_p <- function(alpha, p_theta, hat_pi_0_theta, SIM_F_0_method, 
       de = x_right-x_left
     }
 
-    # refine the search
+    # step II: find the cutoff for FDR control
     hat_F_0_x_left = SIM_estimated_F_0(x_left, p_theta, SIM_F_0_method, mu_theta, sigma_theta)
     if( estimated_FDR(x_left, p_theta, hat_pi_0_theta, hat_F_0_x_left) > alpha ){
       min = 0
     }else{
       min = x_left
-      max_d = 0.8
+      max_d = 1
       diff = 1
       mid = (min+max_d)/2
       while(diff > 0.000001){
@@ -280,20 +280,7 @@ SIM_threshold_for_p <- function(alpha, p_theta, hat_pi_0_theta, SIM_F_0_method, 
     t_alpha_SIM = min
 
   }else if(option$method_t_alpha == 2){
-    # Zhang's version
-    t_grid = seq(option$t_0, option$t_1, (option$t_1-option$t_0)/option$n_t_grid) # grid point for thresholds t
-    hat_F_0 = SIM_estimated_F_0(t_grid, p_theta, SIM_F_0_method, mu_theta, sigma_theta)
-    hat_FDR = estimated_FDR(t_grid, p_theta, hat_pi_0_theta, hat_F_0)
-    index_set = which( hat_FDR <= alpha )
-
-    if(length(index_set)>0){ # not empty
-      t_alpha_SIM = t_grid[ max(index_set) ]
-    }else{
-      t_alpha_SIM = 0
-    }
-
-  }else if(option$method_t_alpha == 3){
-    #------------use the sorted p_value as the t_grid----------------------
+    #------------use the sorted p_value as the t_grid--------------------
     t_grid=sort(p_theta)
 
     hat_F_0 = SIM_estimated_F_0(t_grid, p_theta, SIM_F_0_method, mu_theta, sigma_theta)
@@ -320,87 +307,62 @@ SIM_threshold_for_p <- function(alpha, p_theta, hat_pi_0_theta, SIM_F_0_method, 
 #' @param p_2 the auxiliary p-values
 #' @param alpha the significance level
 #' @param SIM_F_0_method the method for estimating the null distribution
-#' @param option options for choosing theta
+#' @param option the grid for theta
 #' @return the estimated projection direction
-#'
+#' @export
 SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
 
   search_grid_for_theta_0 = option$search_grid_for_theta_0
   par = length(search_grid_for_theta_0)
 
-  # search+search
-  if(option$method_theta_0 == 1){
+  N_rej1 = rep(0, par)
+  for(i in 1:par){
+    theta_i = search_grid_for_theta_0[i]
+    SIM_p = SIM_p_value(p_1, p_2, theta_i)
 
-    N_rej1 = rep(0, par)
-    for(i in 1:par){
-      theta_i = search_grid_for_theta_0[i]
-      SIM_p = SIM_p_value(p_1, p_2, theta_i)
-
-      if(SIM_F_0_method == 1){
-        mu_theta = 0
-        hat_sigma = SIM_estimated_sigma_0_theta(SIM_p)
-      }else if(SIM_F_0_method == 2){
-        mu_theta = NULL
-        hat_sigma = NULL
-      }
-
-      N_rej1[i] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
+    if(SIM_F_0_method == 1){
+      mu_theta = 0
+      hat_sigma = SIM_estimated_sigma_0_theta(SIM_p)
+    }else if(SIM_F_0_method == 2){
+      mu_theta = NULL
+      hat_sigma = NULL
     }
 
-    i_hat = which.max(N_rej1)
-    # refine the method
-    if(i_hat == 1){
-      x_left = search_grid_for_theta_0[1]
-      x_right = search_grid_for_theta_0[2]
-    }else if(i_hat == par){
-      x_left = search_grid_for_theta_0[par-1]
-      x_right = search_grid_for_theta_0[par]
-    }else{
-      x_left = search_grid_for_theta_0[i_hat-1]
-      x_right = search_grid_for_theta_0[i_hat+1]
-    }
-
-    par1 = length(search_grid_for_theta_0)
-    N_rej = rep(0, par1)
-    theta1 = seq(x_left, x_right, (x_right-x_left)/par1)
-    for(k in 1:par1){
-      theta_k = theta1[k]
-      SIM_p = SIM_p_value(p_1, p_2, theta_k)
-
-      if(SIM_F_0_method == 1){
-        mu_theta = 0
-        hat_sigma = SIM_estimated_sigma_0_theta(SIM_p)
-      }else if(SIM_F_0_method == 2){
-        mu_theta = NULL
-        hat_sigma = NULL
-      }
-
-      N_rej[k] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
-    }
-    k_hat = which.max(N_rej)
-    OUT = theta1[k_hat]
-
-  }else if(option$method_theta_0 == 2){
-    R= rep(0, par)
-    for(j in 1:par){
-
-      theta_j = search_grid_for_theta_0[j]
-      SIM_p = SIM_p_value(p_1, p_2, theta_j)
-
-      if(SIM_F_0_method == 1){
-        mu_theta = 0
-        hat_sigma = SIM_estimated_sigma_0_theta(SIM_p)
-      }else if(SIM_F_0_method == 2){
-        mu_theta = NULL
-        hat_sigma = NULL
-      }
-
-      R[j] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
-    }
-
-    J = which.max(R)
-    OUT = search_grid_for_theta_0[J]
+    N_rej1[i] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
   }
+
+  i_hat = which.max(N_rej1)
+  # refine the method
+  if(i_hat == 1){
+    x_left = search_grid_for_theta_0[1]
+    x_right = search_grid_for_theta_0[2]
+  }else if(i_hat == par){
+    x_left = search_grid_for_theta_0[par-1]
+    x_right = search_grid_for_theta_0[par]
+  }else{
+    x_left = search_grid_for_theta_0[i_hat-1]
+    x_right = search_grid_for_theta_0[i_hat+1]
+  }
+
+  par1 = length(search_grid_for_theta_0)
+  N_rej = rep(0, par1)
+  theta1 = seq(x_left, x_right, (x_right-x_left)/par1)
+  for(k in 1:par1){
+    theta_k = theta1[k]
+    SIM_p = SIM_p_value(p_1, p_2, theta_k)
+
+    if(SIM_F_0_method == 1){
+      mu_theta = 0
+      hat_sigma = SIM_estimated_sigma_0_theta(SIM_p)
+    }else if(SIM_F_0_method == 2){
+      mu_theta = NULL
+      hat_sigma = NULL
+    }
+
+    N_rej[k] = sum(SIM_p <= SIM_threshold_for_p(alpha, SIM_p, 1, SIM_F_0_method, mu_theta, hat_sigma, option))
+  }
+  k_hat = which.max(N_rej)
+  OUT = theta1[k_hat]
 
   return(OUT)
 }
@@ -412,9 +374,9 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
 #' @param p_2 the auxiliary p-values
 #' @param alpha the significance level
 #' @param SIM_F_0_method method for estimating the null distrbution (1: parametric; 2: nonparametic method)
-#' @param method_theta method for searching the projection direction theta (1: bisection; 2: grid-search)
 #' @param method_lambda method_lambda method for searching the lambda used in null proportion (1: specified; 2: adaptive)
-#' @param method_t method for searching for the p-value threshold (1: bisection; 2: grid search; 3: grid search using sorted p_values)
+#' @param method_t method for searching the p-value threshold (1: bisection; 2: grid search)
+#' @return the indices of the hypotheses rejected
 #' @examples
 #' p_1 = rnorm(100)
 #' p_1[1:10]=p_1[1:10]+2
@@ -422,20 +384,18 @@ SIM_theta_0_selection <- function(p_1, p_2, alpha, SIM_F_0_method, option){
 #' p_2 = rnorm(100)
 #' p_2[1:10]=p_2[1:10]+2
 #' p_2 = 1-pnorm(p_2)
-#' out = SIM(p_1, p_2, alpha = 0.1, SIM_F_0_method=1, method_theta=1, method_lambda=1, method_t=3)
+#' out = SIM(p_1, p_2, alpha = 0.1, SIM_F_0_method=1, method_lambda=1, method_t=2)
 #' @export
-SIM <- function(p_1, p_2, alpha, SIM_F_0_method=1, method_theta=1, method_lambda=1, method_t=1){
+SIM <- function(p_1, p_2, alpha, SIM_F_0_method=1, method_lambda=1, method_t=1){
 
-  # theta-selection
-  # input(' input option.method_theta_0 (1: bisection; 2: grid search) = ')
+  # theta-grid
   par1 = 30
   option = list()
   option$search_grid_for_theta_0 = seq(0, pi/2, (pi/2)/par1)
-  option$method_theta_0 = method_theta
+
 
   # lambda-selection
   # input(' input option_method_selecting_lambda (1: specified; 2: adaptive) = ')
-  # method for selecting \lambda in \hat \pi_0(\lambda)
   option$method_selecting_lambda = method_lambda
 
   if(option$method_selecting_lambda == 1){
@@ -446,14 +406,8 @@ SIM <- function(p_1, p_2, alpha, SIM_F_0_method=1, method_theta=1, method_lambda
   }
 
   # t_grid search
-  # input(' input option.method_t_alpha (1: bisection; 2: grid search; 3: grid search using sorted p_values) = ');
-  # method for obtaining the threshold t_\alpha(theta)
+  # input(' input option.method_t_alpha (1: bisection; 2: grid search)
   option$method_t_alpha = method_t
-  if(option$method_t_alpha == 2){
-    option$t_0 = 0;
-    option$t_1 = 1;
-    option$n_t_grid = 10^4+1
-  }
 
   theta_I = SIM_theta_0_selection(p_1, p_2, alpha, SIM_F_0_method, option)
   SIM_p = SIM_p_value(p_1, p_2, theta_I)
