@@ -7,7 +7,7 @@
 #' @param sigma_0_theta the sd of the single-index p-valu
 #'
 #' @return the null distribution, same size as t
-#'
+#' @export
 SIM_estimated_F_0 <- function(t, p_theta, SIM_F_0_method, mu_0_theta, sigma_0_theta){
 
   if(SIM_F_0_method==1){ #parametric method
@@ -28,7 +28,7 @@ SIM_estimated_F_0 <- function(t, p_theta, SIM_F_0_method, mu_0_theta, sigma_0_th
 #' @param p_vec vector of 1D p-values
 #'
 #' @return the null distribution, same size as t
-#'
+#' @export
 nonparametric_estimated_F_0 <- function(t, p_vec){
 
   denominator = 2*sum( p_vec > 0.5 & p_vec <= 1 ) + sum( p_vec == 0.5 )
@@ -56,7 +56,7 @@ nonparametric_estimated_F_0 <- function(t, p_vec){
 #' @param hat_F_0_lambda \eqn{\hat{F}_0(\lambda)}
 #'
 #' @return \eqn{\hat\pi_0(\lambda)}
-#'
+#' @export
 estimated_pi_0 <- function(lambda, p_vec, hat_F_0_lambda){
 
   m= length(p_vec)
@@ -76,7 +76,7 @@ estimated_pi_0 <- function(lambda, p_vec, hat_F_0_lambda){
 #' @param hat_F_0_t the null distribution, same size as t
 #'
 #' @return the estimated FDR, same size as t
-#'
+#' @export
 estimated_FDR <- function(t, p_vec, hat_pi_0, hat_F_0_t){
 
   m = length(p_vec)
@@ -96,7 +96,7 @@ estimated_FDR <- function(t, p_vec, hat_pi_0, hat_F_0_t){
 #' @param p_2 component p-value
 #'
 #' @return SIM_p: single index modulated p-value
-#'
+#' @export
 SIM_p_value <- function(p_1, p_2, theta){
 
   if(theta == 0){
@@ -115,7 +115,7 @@ SIM_p_value <- function(p_1, p_2, theta){
 #'
 #' @param SIM_p single-index SIM_p-value
 #' @return \eqn{\hat\mu_0(\theta)}
-#'
+#' @export
 SIM_estimated_mu_0_theta <- function(SIM_p){
 
   z = stats::qnorm(SIM_p)
@@ -128,7 +128,7 @@ SIM_estimated_mu_0_theta <- function(SIM_p){
 #'
 #' @param SIM_p single-index SIM p-values
 #' @return the sd of the SIM p-value
-#'
+#' @export
 SIM_estimated_sigma_0_theta <- function(SIM_p){
 
   SIM_p = pmin(SIM_p, 0.999999)
@@ -147,7 +147,7 @@ SIM_estimated_sigma_0_theta <- function(SIM_p){
 #' @param mu_theta \eqn{\mu_0(\theta)}
 #' @param sigma_theta \eqn{\sigma_0(\theta)}
 #' @param option options for choosing lambda
-#'
+#' @export
 SIM_lambda_selection <-  function(p_theta, SIM_F_0_method, mu_theta, sigma_theta, option){
 
   if(option$method_selecting_lambda == 1){ #specified value
@@ -200,7 +200,7 @@ SIM_lambda_selection <-  function(p_theta, SIM_F_0_method, mu_theta, sigma_theta
 #' @param option options for choosing the grid
 #'
 #' @return t_alpha_SIM: threshold value for SIM p-values
-#'
+#' @export
 SIM_threshold_for_p <- function(alpha, p_theta, hat_pi_0_theta, SIM_F_0_method, mu_theta, sigma_theta, option){
 
   if(option$method_t_alpha == 1){
